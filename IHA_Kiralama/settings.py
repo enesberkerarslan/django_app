@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -41,9 +42,25 @@ INSTALLED_APPS = [
     'IHA_Kiralama',
     'django_filters',
     'post',
+    'rest_framework_simplejwt', # refresh token için
+    'corsheaders', #cors error için
 ]
 
+#jwt token için
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+#Acces token süresi
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', # cors 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -55,6 +72,9 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'IHA_Kiralama.urls'
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",  # veya front-end uygulamanızın adresi
+]
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -79,8 +99,15 @@ WSGI_APPLICATION = 'IHA_Kiralama.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',  # Veritabanı motoru, örneğin PostgreSQL
+        'NAME': 'rentdb',                           # Veritabanı adı
+        'USER': 'postgres',                            # Veritabanı kullanıcısı
+        'PASSWORD': 'Enesberk1',                    # Veritabanı şifresi
+        'HOST': 'localhost',                        # Veritabanı sunucusu adresi
+        'PORT': '5432',                             # Veritabanı bağlantı noktası
+        'OPTIONS': {
+            'client_encoding': 'UTF8',  # veya 'LATIN1' veya 'ISO-8859-1' gibi uygun bir değer
+        },
     }
 }
 
@@ -125,3 +152,10 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#Use User Model
+CSRF_COOKIE_SECURE = False
+
+# b
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True  # Bu satır, kullanıcının kimlik bilgilerini içeren isteklere izin verir.
