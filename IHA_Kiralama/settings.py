@@ -45,7 +45,14 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt', # refresh token için
     'corsheaders', #cors error için
 ]
-
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 #jwt token için
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -154,7 +161,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #Use User Model
-CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = False # js tarafından okunmasına izin veriyoruz
 
 # b
 CORS_ALLOW_ALL_ORIGINS = True

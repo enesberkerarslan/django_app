@@ -60,6 +60,8 @@
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="js/main.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="js/projectcustom.js"></script>
+
 </body>
 </html>
 
@@ -69,24 +71,7 @@
             var username = $("input[name='username']").val();
             var email = $("input[name='email']").val();
             var password = $("input[name='password']").val();
-            fetch('http://127.0.0.1:8000/register/', {
-				method: 'POST',
-                headers: {
-					'Content-Type': 'application/json', // JSON içerik gönderdiğinizi belirtin
-				},
-				body: JSON.stringify({
-					username: username,
-                    email : email,
-					password: password,
-				}),
-				mode: 'cors',
-				credentials: 'include',
-				})
-				.then(response => response.json())
-				.then(data => {
-					console.log(data);
-					alert('Başarılı giriş!');})
-				.catch(error => console.error('Error:', error));
+            registerUser(username, email,password);
 
         });     
     });

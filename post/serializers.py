@@ -15,5 +15,5 @@ class RentSerializer(serializers.ModelSerializer):
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'username','password','is_active', 'is_staff']
+        fields = ['id', 'email', 'username']
         extra_kwargs = {'password': {'write_only': True}}
