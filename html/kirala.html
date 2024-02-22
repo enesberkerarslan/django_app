@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IHA Kiralama</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+
+<body>
+    <!-- Navbar (Başlık Çubuğu) -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="index.html">İHA Kiralama</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="iha.html">İHA Kiralama</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Kiralama Kayıtlarım</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="allrent.html">Tüm Kiralama Kayıtları</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html">Çıkış yap</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    <div class="container mt-4">
+        <h2>IHA Kiralama</h2>
+        <!-- Kiralama Formu -->
+        <div class="container mt-4">
+                <div class="form-group">
+                    <label for="dateHourRanges">Kiralama Tarih ve Saat Aralığı:(2024-02-22 10:00 - 2024-02-22 12:00)</label>
+                    <input type="text" class="form-control" id="dateHourRanges" name="dateHourRanges" required>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="submitRentForm()">IHA Kirala</button>
+        </div>
+
+    <!-- Bootstrap JS ve jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Özel JavaScript dosyanızı burada ekleyin -->
+    <script src="js/projectcustom.js"></script>
+
+</body>
+
+</html>
+<script>
+
+    function submitRentForm() {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        const ihaId = urlParams.get('id');
+        
+        console.log(ihaId);
+        const dateHourRanges = document.getElementById('dateHourRanges').value;
+
+        // Kiralama isteğini gönder
+        rentIHA(ihaId, dateHourRanges);
+    }
+</script>

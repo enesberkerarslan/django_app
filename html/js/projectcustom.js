@@ -70,7 +70,7 @@ async function logout() {
 
 
 //register işlemi
-function registerUser(username,email,password) {
+function registerUser(username, email, password) {
 
     fetch('http://127.0.0.1:8000/register/', {
         method: 'POST',
@@ -85,13 +85,12 @@ function registerUser(username,email,password) {
         mode: 'cors',
         credentials: 'include',
     })
-    .then(response => response.json())
-    .then(data => {
-        console.log(data);
-    })
-    .catch(error => console.error('Error:', error));
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+        })
+        .catch(error => console.error('Error:', error));
 }
-
 
 // Access token'ı local storage'dan almak için bir yardımcı fonksiyon
 function getAccessToken() {
@@ -103,7 +102,7 @@ function handleTokenValidationResponse(data) {
     if (data.detail === 'Given token not valid for any token type' && data.code === 'token_not_valid') {
         // Eğer token geçerli değilse, login.html sayfasına yönlendir
         window.location.href = 'login.html';
-    } 
+    }
 }
 
 
@@ -133,7 +132,7 @@ async function checkAccessTokenExpiry() {
                 localStorage.removeItem('refresh_token');
                 window.location.href = 'login.html';
             }
-            
+
         } catch (error) {
             console.error('Hata:', error);
         }
@@ -155,15 +154,15 @@ function redrawTable(data) {
             { data: 'model' },
             { data: 'weight' },
             { data: 'category' },
-            { data: null, render: function(data, type, row) {
-                // İşlemler sütunu için butonları ekleyin
-                
-                return `
+            {
+                data: null, render: function (data, type, row) {
+                    return `
                     <button class="btn btn-danger" onclick="deleteIHA(${row.id})">Sil</button>
                     <button class="btn btn-info" onclick="editIHA(${row.id})">Düzenle</button>
-                    <button class="btn btn-success" onclick="rentIHA(${row.id})">Kirala</button>`;
-                
-            }}
+                    <button class="btn btn-success" onclick="rentIHAhtml(${row.id})">Kirala</button>`;
+
+                }
+            }
         ]
     });
 
@@ -218,14 +217,21 @@ async function addIHA(brand, model, weight, category) {
                     category: category,
                     model: model,
                     weight: weight,
-                    
+
                 }),
             });
+            if (response.ok) {
+                // If the deletion was successful, reload the DataTable
+                const data = await response.json();
+                console.log('Ekleme:', data);
+                window.location.href = 'iha.html';
+                listIHAs();
+            } else {
+                // If there was an error in the deletion, log the error
+                console.error('IHA ekleme hatası:', response.statusText);
+            }
 
-            const data = await response.json();
-            console.log('Ekleme:', data);
 
-            // TODO: Ekleme sonrası işlemler
         } catch (error) {
             console.error('Hata:', error);
         }
@@ -343,6 +349,7 @@ async function updateIHA(ihaId, updatedData) {
         if (response.ok) {
             const data = await response.json();
             console.log('IHA başarıyla güncellendi:', data);
+            window.location.href = 'iha.html';
             // Gerekirse başarı durumunda ek işlemler yapabilirsiniz
         } else {
             console.error('IHA güncelleme hatası:', response.statusText);
@@ -351,5 +358,290 @@ async function updateIHA(ihaId, updatedData) {
     } catch (error) {
         console.error('Network hatası:', error);
         // Gerekirse ağ hatası durumunda ek işlemler yapabilirsiniz
+    }
+}
+
+async function rentIHAhtml(ihaId) {
+    const accessToken = getAccessToken();
+
+    if (accessToken) {
+        try {
+            const newUrl = `kirala.html?id=${ihaId}`;
+            window.location.href = newUrl;
+        } catch (error) {
+            console.error('Hata:', error);
+        }
+    } else {
+        console.error('Access token bulunamadı.');
+    }
+}
+
+// IHA kiralama işlemi
+async function rentIHA(ihaId, dateHourRanges) {
+    const accessToken = getAccessToken();
+
+    if (accessToken) {
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/kiralamalar/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+                mode: 'cors',
+                credentials: 'include',
+                body: JSON.stringify({
+                    iha_id: ihaId,
+                    date_hour_ranges: dateHourRanges,
+                }),
+            });
+            console.log("asf")
+            const data = await response.json();
+
+            if (response.ok) {
+                console.log('IHA kiralama başarılı:', data);
+                window.location.href = 'iha.html';
+            } else {
+                console.error('IHA kiralama hatası:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Network hatası:', error);
+        }
+    } else {
+        console.error('Access token bulunamadı.');
+    }
+}
+
+// user rent datatable
+function userRentTableDraw(data) {
+    console.log('Kiralama Kayıxxtları Data:', data);
+
+    const table = $('#rentTable').DataTable({
+        destroy: true, // DataTables'i yeniden başlat
+        data: data, // Verileri tabloya ekle
+        columns: [
+            { data: 'id' },
+            { data: 'date_hour_ranges' },
+            { data: 'iha' },
+            {
+                data: null, render: function (data, type, row) {
+                    return `
+                    <button class="btn btn-danger" onclick="deleteRentById(${row.id})">Sil</button>
+                    <button class="btn btn-info" onclick="editRent(${row.id})">Düzenle</button>`;
+
+                }
+            }
+        ]
+    });
+
+    // DataTables'i yeniden çiz
+    table.draw();
+}
+
+//userın kiraladıkları
+async function getUserRents() {
+    const accessToken = getAccessToken(); // Access token'ı al
+
+    if (accessToken) {
+        try {
+            // Kullanıcının kiralama kayıtlarını getiren GET isteği
+            const response = await fetch('http://127.0.0.1:8000/api/kiralamalar/user_rents/', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+                mode: 'cors',
+                credentials: 'include',
+            });
+
+            // İsteğin başarılı olup olmadığını kontrol et
+            if (response.ok) {
+                // JSON verisini al ve kullan
+                const data = await response.json();
+                console.log('Kiralama Kayıtları:', data);
+                userRentTableDraw(data);
+            } else {
+                // İsteğin başarısız olması durumunda hata mesajını logla
+                console.error('Kiralama kayıtları alma hatası:', response.statusText);
+            }
+
+        } catch (error) {
+            // Ağ hatası durumunda hatayı logla
+            console.error('Network hatası:', error);
+        }
+    } else {
+        console.error('Access token bulunamadı.');
+    }
+}
+
+function allRentTableDraw(data) {
+    console.log('Kiralama Kayıxxtları Data:', data);
+
+    const table = $('#rentTable').DataTable({
+        destroy: true, // DataTables'i yeniden başlat
+        data: data, // Verileri tabloya ekle
+        columns: [
+            { data: 'id' },
+            { data: 'date_hour_ranges' },
+            { data: 'iha' },
+            { data: 'renting_member' },
+            {
+                data: null, render: function (data, type, row) {
+                    return `
+                    <button class="btn btn-danger" onclick="deleteRentById(${row.id})">Sil</button>
+                    <button class="btn btn-info" onclick="editRent(${row.id})">Düzenle</button>`;
+
+                }
+            }
+        ]
+    });
+
+    // DataTables'i yeniden çiz
+    table.draw();
+}
+// Tüm kiralama kayıtlarını listeleyen fonksiyon
+async function getAllRents() {
+    const accessToken = getAccessToken();
+
+    if (accessToken) {
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/kiralamalar/', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+                mode: 'cors',
+                credentials: 'include',
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Tüm Kiralama Kayıtları:', data);
+                allRentTableDraw(data);
+                // İlgili HTML elementine kiralama kayıtlarını ekleme veya gösterme
+            } else {
+                console.error('Kiralama kayıtları alma hatası:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Network hatası:', error);
+        }
+    } else {
+        console.error('Access token bulunamadı.');
+    }
+}
+
+// Kiralama kaydını ID ile silen fonksiyon
+async function deleteRentById(rentId) {
+    const accessToken = getAccessToken();
+
+    if (accessToken) {
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/api/kiralamalar/${rentId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+                mode: 'cors',
+                credentials: 'include',
+            });
+
+            if (response.ok) {
+                console.log('Kiralama kaydı silindi.');
+                location.reload();
+            } else {
+                console.error('Kiralama kaydı silme hatası:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Network hatası:', error);
+        }
+    } else {
+        console.error('Access token bulunamadı.');
+    }
+}
+
+// Kiralama kaydını ID ile düzenleyen fonksiyon
+async function editRentById(rentId, updatedData) {
+    const accessToken = getAccessToken();
+
+    if (accessToken) {
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/api/kiralamalar/${rentId}/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+                mode: 'cors',
+                credentials: 'include',
+                body: JSON.stringify(updatedData),
+            });
+
+            if (response.ok) {
+                console.log('Kiralama kaydı güncellendi.');
+                window.location.href = 'kiralamakayitlar.html';
+            } else {
+                console.error('Kiralama kaydı güncelleme hatası:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Network hatası:', error);
+        }
+    } else {
+        console.error('Access token bulunamadı.');
+    }
+}
+
+// İsteği yapmak için bir fonksiyon
+async function getRentInfoById(id) {
+    const accessToken = getAccessToken();
+
+    if (accessToken) {
+        try {
+            // HTTP GET isteği
+            const response = await fetch(`http://127.0.0.1:8000/api/kiralamalar/${id}/get_rent_info_by_id/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+                mode: 'cors',
+                credentials: 'include',
+            });
+
+            // İsteğin başarılı olup olmadığını kontrol et
+            if (response.ok) {
+                // JSON verisini al ve kullan
+                const data = await response.json();
+                console.log('Rent Info:', data);
+                document.getElementById('dateHourRanges').value = data.date_hour_ranges;
+            } else {
+                // İsteğin başarısız olması durumunda hata mesajını logla
+                console.error('Rent Info alma hatası:', response.statusText);
+            }
+
+        } catch (error) {
+            // Ağ hatası durumunda hatayı logla
+            console.error('Network hatası:', error);
+        }
+    } else {
+        console.error('Access token bulunamadı.');
+    }
+}
+
+//editRent için fonksiyon
+async function editRent(rentId) {
+    const accessToken = getAccessToken();
+
+    if (accessToken) {
+        try {
+            const newUrl = `editkiralama.html?id=${rentId}`;
+            window.location.href = newUrl;
+        } catch (error) {
+            console.error('Hata:', error);
+        }
+    } else {
+        console.error('Access token bulunamadı.');
     }
 }

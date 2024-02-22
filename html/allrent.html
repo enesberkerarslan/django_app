@@ -43,28 +43,27 @@
             </ul>
         </div>
     </nav>
+
     <div class="container mt-4">
-        <h2>IHA Kiralama</h2>
+        <h2>Kiralamalarım</h2>
 
-        <!-- İha Düzenleme Formu -->
-            <div class="form-group">
-                <label for="brand">Marka:</label>
-                <input type="text" class="form-control" id="brand" name="brand" required>
-            </div>
-            <div class="form-group">
-                <label for="model">Model:</label>
-                <input type="text" class="form-control" id="model" name="model" required>
-            </div>
-            <div class="form-group">
-                <label for="weight">Ağırlık:</label>
-                <input type="number" class="form-control" id="weight" name="weight" required>
-            </div>
-            <div class="form-group">
-                <label for="category">Kategori:</label>
-                <input type="text" class="form-control" id="category" name="category" required>
-            </div>
-            <button type="submit" class="btn btn-primary" id="editIHAButton">IHA Düzenle</button>
-
+        <!-- İha Listesi -->
+        <div>
+            <table id="rentTable" class="table mt-4">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Zaman Aralığı</th>
+                        <th>IHA ID</th>
+                        <th>Üye ID</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="rentTableBody">
+                    <!-- İhalar buraya eklenecek -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Bootstrap JS ve jQuery -->
@@ -75,33 +74,15 @@
     <!-- DataTables JS -->
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.js"></script>
     <script src="js/projectcustom.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
 
-    <!-- Özel JavaScript dosyanızı burada ekleyin -->
+    <!-- DataTables JS -->
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+    <script>
+        window.onload = function () {
+            getAllRents();
+        };
+    </script>
 </body>
 
 </html>
-<script>
-    window.onload = function() {
-    // URL'den parametreleri al
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // 'id' parametresini kontrol et
-        if (urlParams.has('id')) {
-            // 'id' parametresinin değerini al
-            const ihaId = urlParams.get('id');
-            getIHAInfoById(ihaId)
-            document.getElementById('editIHAButton').addEventListener('click', function () {
-            // Get input values
-            const updatedData = {
-                brand: $('#brand').val(),
-                model: $('#model').val(),
-                weight: $('#weight').val(),
-                category: $('#category').val()
-            };
-            // Call addIHA function
-            updateIHA(ihaId, updatedData); 
-        });
-        }
-    };
-
-</script>

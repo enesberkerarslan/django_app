@@ -34,9 +34,12 @@ class IHAViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response({"message": "Kayıt başarıyla silindi."}, status=status.HTTP_204_NO_CONTENT)
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({'error': 'Kiralama kaydı bulunamadı'}, status=status.HTTP_404_NOT_FOUND)
     
     @action(detail=True, methods=['GET'])
     def get_iha_info_by_id(self, request, pk=None):
@@ -51,6 +54,59 @@ class IHAViewSet(viewsets.ModelViewSet):
 class RentViewSet(viewsets.ModelViewSet):
     queryset = Rent.objects.all()
     serializer_class = RentSerializer
+    permission_classes = [IsAuthenticatedAndTokenValid]
+
+    def create(self, request, *args, **kwargs):
+        iha_id = request.data.get('iha_id')
+        date_hour_ranges = request.data.get('date_hour_ranges')
+        renting_member = request.user  # kullanıcı bilgisi
+        # IHA'nın mevcut olup olmadığını kontrol et
+        try:
+            iha = IHA.objects.get(id=iha_id)
+        except IHA.DoesNotExist:
+            return Response({'error': 'IHA not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Rent modelini oluştur ve veritabanına kaydet
+        rent = Rent.objects.create(iha=iha, date_hour_ranges=date_hour_ranges, renting_member=renting_member)
+
+        # Oluşturulan Rent modelini serializer kullanarak JSON formatına çevir
+        serializer = RentSerializer(rent)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @action(detail=False, methods=['GET'])
+    def user_rents(self, request):
+        user_rents = Rent.objects.filter(renting_member=request.user)
+        serializer = RentSerializer(user_rents, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+    # delete 
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({'error': 'kiralama kaydı bulunamadı'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Belirli bir kiralama kaydını ID ile güncelleme view fonksiyonu
+    def  update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['GET'])
+    def get_rent_info_by_id(self, request, pk=None):
+        try:
+            # Verilen id'ye sahip IHA'yı getir
+            iha = Rent.objects.get(pk=pk)
+            serializer = RentSerializer(iha)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Rent.DoesNotExist:
+            return Response({'detail': 'Rent not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()

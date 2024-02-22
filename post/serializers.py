@@ -10,6 +10,7 @@ class RentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rent
         fields = '__all__'
+        
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
